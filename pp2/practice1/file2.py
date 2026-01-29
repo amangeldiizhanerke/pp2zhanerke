@@ -1,3 +1,4 @@
+#data types
 n = int(input())
 lst = []
 lstnumbers=[]
