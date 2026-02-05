@@ -1,6 +1,6 @@
 # The "elif" keyword is used when the previous condition is false
-# The "else" keyword is used when all previous conditions are false
-# It runs when "if" / "elif" conditions are True
+# The else statement is executed when the if condition (and any elif conditions) evaluate to False
+# The else statement must come last. You cannot have an elif after an else.
 # Example 1:
 a = 200
 b = 33
