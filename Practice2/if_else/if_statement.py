@@ -24,7 +24,7 @@ if is_logged_in:
 """
 To write an if statement in python:
 Used the word if
-Writen a condition
+Written a condition
 Used a colon (:)
 The code is indented below so program understands what line links with the condition
 """
