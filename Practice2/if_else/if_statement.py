@@ -22,9 +22,11 @@ if is_logged_in:
   print("Welcome back!")
 
 """
-To write an if statement in python:
-Used the word if
-Written a condition
-Used a colon (:)
-The code is indented below so program understands what line links with the condition
+An "if statement" is written by using the if keyword
+Equals: a == b
+Not Equals: a != b
+Less than: a < b
+Less than or equal to: a <= b
+Greater than: a > b
+Greater than or equal to: a >= b
 """
