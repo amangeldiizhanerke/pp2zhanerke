@@ -1,85 +1,63 @@
 import re
 import json
 
-# RegEx examples section
+# read receipt text
+with open("raw.txt","r",encoding="utf-8") as f:
+   text=f.read()
 
+lines=text.splitlines()
 
-text_example = "Order 123 paid by CARD total 1500 KZT"
+# extract product names
+products=[]
+for i in range(len(lines)-1):
+   if re.fullmatch(r"\d+\.",lines[i].strip()):
+       name=lines[i+1].strip()
+       if name:
+           products.append(name)
 
-print("=== RegEx Examples ===")
+# extract prices after "Стоимость"
+prices=[]
+for i in range(len(lines)-1):
+   if lines[i].strip()=="Стоимость":
+       s=lines[i+1].strip()
+       s=s.replace(" ","").replace(",",".")
+       if re.fullmatch(r"\d+(\.\d{2})",s):
+           prices.append(float(s))
 
-# search
-match = re.search(r"\d+", text_example)
-print("search:", match.group(0) if match else None)
+# calculate total from items
+calculated_total=round(sum(prices),2)
 
-# findall
-numbers = re.findall(r"\d+", text_example)
-print("findall:", numbers)
+# extract total from receipt
+total_from_receipt=None
+m=re.search(r"ИТОГО:\s*([\d\s]+,\d{2})",text)
+if m:
+   total_from_receipt=float(m.group(1).replace(" ","").replace(",","."))
 
-# split
-words = re.split(r"\s+", text_example)
-print("split:", words)
+# extract payment method
+payment_method=None
+payment_amount=None
+m=re.search(r"(Банковская карта|Наличные)\s*:\s*([\d\s]+,\d{2})",text)
+if m:
+   payment_method=m.group(1)
+   payment_amount=float(m.group(2).replace(" ","").replace(",","."))
 
-# sub
-replaced = re.sub(r"\d+", "X", text_example)
-print("sub:", replaced)
+# extract date and time
+datetime=None
+m=re.search(r"Время:\s*(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}:\d{2})",text)
+if m:
+   datetime=m.group(1)
 
-print()
-
-
-
-# Receipt parsing section
-
-
-with open("raw.txt", "r", encoding="utf-8") as f:
-    text = f.read()
-
-
-# find all prices (example: 1200, 1 200, 1200.50)
-price_matches = re.findall(r"\d[\d\s]*\.?\d*", text)
-
-prices = []
-for p in price_matches:
-    p = p.replace(" ", "")
-    try:
-        prices.append(float(p))
-    except:
-        pass
-
-
-# find product names (lines that contain letters and a price)
-products = []
-lines = text.split("\n")
-
-for line in lines:
-    if re.search(r"[A-Za-zА-Яа-я]", line) and re.search(r"\d", line):
-        name = re.sub(r"\d[\d\s]*\.?\d*", "", line).strip()
-        if name:
-            products.append(name)
-
-
-# find date (simple pattern)
-date_match = re.search(r"\d{2}[-/.]\d{2}[-/.]\d{4}", text)
-date = date_match.group(0) if date_match else None
-
-
-# find payment method
-payment_match = re.search(r"CARD|CASH|KASPI|VISA|MASTERCARD", text, re.IGNORECASE)
-payment = payment_match.group(0) if payment_match else None
-
-
-# calculate total
-total = round(sum(prices), 2)
-
-
-# structured output
-result = {
-    "date": date,
-    "payment_method": payment,
-    "products": products,
-    "prices": prices,
-    "calculated_total": total
+# structured result
+result={
+"datetime":datetime,
+"payment_method":payment_method,
+"payment_amount":payment_amount,
+"products":products,
+"prices":prices,
+"items_count":len(products),
+"calculated_total":calculated_total,
+"total_from_receipt":total_from_receipt,
+"total_matches":calculated_total==total_from_receipt if total_from_receipt else None
 }
 
-print("=== Parsed Receipt ===")
-print(json.dumps(result, indent=2, ensure_ascii=False))
+print(json.dumps(result,indent=2,ensure_ascii=False))
