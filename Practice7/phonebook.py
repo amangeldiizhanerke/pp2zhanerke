@@ -1,17 +1,17 @@
-import csv
-from connect import get_connection
+import csv  # module to work with CSV files (read/write tabular data)
+from connect import get_connection  # function to connect to PostgreSQL database
 
 def create_table():
-    conn = get_connection()
-    cur = conn.cursor()
+    conn = get_connection()  # open connection to DB
+    cur = conn.cursor()  # create cursor to execute SQL commands
     cur.execute("""
         CREATE TABLE IF NOT EXISTS phonebook (
-            id SERIAL PRIMARY KEY,
+            id SERIAL PRIMARY KEY,  # auto-increment ID
             first_name VARCHAR(100) NOT NULL,
-            phone VARCHAR(30) NOT NULL UNIQUE
+            phone VARCHAR(30) NOT NULL UNIQUE  # UNIQUE prevents duplicate numbers
         )
     """)
-    conn.commit()
+    conn.commit()  # save changes
     cur.close()
     conn.close()
     print("Table created")
@@ -20,17 +20,19 @@ def insert_from_csv():
     conn = get_connection()
     cur = conn.cursor()
 
+    # open CSV file and read it as dictionary (column_name -> value)
     with open("contacts.csv", "r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         for row in reader:
             try:
+                # insert each row into database
                 cur.execute(
                     "INSERT INTO phonebook (first_name, phone) VALUES (%s, %s)",
                     (row["first_name"], row["phone"])
                 )
                 conn.commit()
             except:
-                conn.rollback()
+                conn.rollback()  # undo if error (e.g. duplicate phone)
 
     cur.close()
     conn.close()
@@ -58,6 +60,7 @@ def update_contact():
 
     conn = get_connection()
     cur = conn.cursor()
+    # update existing contact
     cur.execute(
         "UPDATE phonebook SET first_name = %s, phone = %s WHERE first_name = %s",
         (new_name, new_phone, old_name)
@@ -80,6 +83,7 @@ def query_contacts():
         cur.execute("SELECT * FROM phonebook WHERE first_name = %s", (name,))
     elif choice == "2":
         prefix = input("Enter prefix: ")
+        # LIKE used to search by beginning of phone number
         cur.execute("SELECT * FROM phonebook WHERE phone LIKE %s", (prefix + "%",))
     else:
         print("Invalid choice")
@@ -87,7 +91,7 @@ def query_contacts():
         conn.close()
         return
 
-    rows = cur.fetchall()
+    rows = cur.fetchall()  # get all results
     for row in rows:
         print(row)
 
@@ -122,7 +126,7 @@ def delete_contact():
 def show_all_contacts():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM phonebook ORDER BY id")
+    cur.execute("SELECT * FROM phonebook ORDER BY id")  # sort by ID
     rows = cur.fetchall()
     for row in rows:
         print(row)
@@ -131,6 +135,7 @@ def show_all_contacts():
 
 def main():
     while True:
+        # simple CLI menu
         print("\n1. Create table")
         print("2. Insert from CSV")
         print("3. Insert from console")
