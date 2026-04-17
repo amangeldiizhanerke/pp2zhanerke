@@ -45,7 +45,7 @@ def game_over_screen(score):
     pygame.time.delay(2000)
 
 def game_loop():
-    fps = 7   # ⬅️ было 10 → сделали медленнее
+    fps = 7  
     score = 0
     level = 1
     food_per_level = 3
@@ -108,7 +108,7 @@ def game_loop():
 
             if score % food_per_level == 0:
                 level += 1
-                fps += 1   # ⬅️ рост скорости мягче
+                fps += 1   
 
         screen.fill(BLACK)
 
