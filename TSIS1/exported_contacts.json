@@ -1,0 +1,119 @@
+[
+    {
+        "first_name": "Aruzhan",
+        "last_name": "Samatova",
+        "email": "aruzhan@mail.com",
+        "birthday": "2005-02-14",
+        "group": "Friend",
+        "phones": [
+            {
+                "phone": "87011234567",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Dias",
+        "last_name": "Karimov",
+        "email": "dias@mail.com",
+        "birthday": "2004-08-21",
+        "group": "Work",
+        "phones": [
+            {
+                "phone": "87025556677",
+                "type": "work"
+            }
+        ]
+    },
+    {
+        "first_name": "Dana",
+        "last_name": "Nurpeisova",
+        "email": "dana@mail.com",
+        "birthday": "2005-11-03",
+        "group": "Family",
+        "phones": [
+            {
+                "phone": "87778889900",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Aruzhan",
+        "last_name": "Samatova",
+        "email": "aruzhan@mail.com",
+        "birthday": "2005-02-14",
+        "group": "Friend",
+        "phones": [
+            {
+                "phone": "87011234567",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Dias",
+        "last_name": "Karimov",
+        "email": "dias@mail.com",
+        "birthday": "2004-08-21",
+        "group": "Work",
+        "phones": [
+            {
+                "phone": "87025556677",
+                "type": "work"
+            }
+        ]
+    },
+    {
+        "first_name": "Dana",
+        "last_name": "Nurpeisova",
+        "email": "dana@mail.com",
+        "birthday": "2005-11-03",
+        "group": "Family",
+        "phones": [
+            {
+                "phone": "87778889900",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Aruzhan",
+        "last_name": "Samatova",
+        "email": "test@mail.com",
+        "birthday": "2005-02-14",
+        "group": "Friend",
+        "phones": [
+            {
+                "phone": "87000000000",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Aigerim",
+        "last_name": "Omarova",
+        "email": "aigerim@mail.com",
+        "birthday": "2005-05-12",
+        "group": "Friend",
+        "phones": [
+            {
+                "phone": "87073334455",
+                "type": "mobile"
+            }
+        ]
+    },
+    {
+        "first_name": "Nursultan",
+        "last_name": "Sakenov",
+        "email": "nursultan@mail.com",
+        "birthday": "2004-10-30",
+        "group": "Work",
+        "phones": [
+            {
+                "phone": "87014445566",
+                "type": "work"
+            }
+        ]
+    }
+]
