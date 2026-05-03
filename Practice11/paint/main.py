@@ -1,310 +1,281 @@
 import pygame
 import math
-import sys
 
 pygame.init()
 
-# Screen settings
-WIDTH = 900
-HEIGHT = 650
-TOOLBAR_HEIGHT = 90
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (20, 20, 20)
-GRAY = (210, 210, 210)
-DARK_GRAY = (80, 80, 80)
-RED = (230, 70, 70)
-GREEN = (80, 200, 120)
-BLUE = (70, 160, 255)
-YELLOW = (255, 215, 0)
-PINK = (255, 105, 180)
-PURPLE = (160, 90, 220)
-
-# Create game window
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Practice 11 Paint")
 
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 24)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+PURPLE = (255, 0, 255)
 
-# Canvas is a separate surface below the toolbar.
-# All drawings are saved on this surface.
-canvas = pygame.Surface((WIDTH, HEIGHT - TOOLBAR_HEIGHT))
+canvas = pygame.Surface((WIDTH, HEIGHT))
 canvas.fill(WHITE)
 
-# Current drawing settings
-current_color = BLACK
-current_tool = "pencil"
-brush_size = 5
+clock = pygame.time.Clock()
 
-# Mouse drawing state
+color = BLACK
+brush_size = 8
+mode = "brush"
+
 drawing = False
 start_pos = None
 last_pos = None
 
-# List of available colors.
-colors = [
-    (BLACK, "Black"),
-    (RED, "Red"),
-    (GREEN, "Green"),
-    (BLUE, "Blue"),
-    (YELLOW, "Yellow"),
-    (PINK, "Pink"),
-    (PURPLE, "Purple")
-]
 
-# List of available tools.
-# Assignment 11 shapes are included here.
-tools = [
-    ("Pencil", "pencil"),
-    ("Eraser", "eraser"),
-    ("Square", "square"),
-    ("Right Tri", "right_triangle"),
-    ("Eq Tri", "equilateral_triangle"),
-    ("Rhombus", "rhombus")
-]
-
-
-# This function draws text on the screen.
-def draw_text(text, x, y, color=BLACK):
-    img = font.render(text, True, color)
-    screen.blit(img, (x, y))
-
-
-# Convert mouse position from full screen coordinates to canvas coordinates.
-def to_canvas_pos(pos):
-    return pos[0], pos[1] - TOOLBAR_HEIGHT
-
-
-# This function draws the toolbar, buttons, and color palette.
-def draw_toolbar():
-    pygame.draw.rect(screen, GRAY, (0, 0, WIDTH, TOOLBAR_HEIGHT))
-
-    # Draw tool buttons.
-    x = 10
-    for name, tool in tools:
-        rect = pygame.Rect(x, 10, 120, 30)
-
-        # Selected tool is shown with white background.
-        if current_tool == tool:
-            pygame.draw.rect(screen, WHITE, rect, border_radius=5)
-            pygame.draw.rect(screen, BLACK, rect, 2, border_radius=5)
-            draw_text(name, x + 10, 17, BLACK)
-        else:
-            pygame.draw.rect(screen, DARK_GRAY, rect, border_radius=5)
-            draw_text(name, x + 10, 17, WHITE)
-
-        x += 130
-
-    # Draw color buttons.
-    x = 10
-    y = 52
-
-    for color, name in colors:
-        rect = pygame.Rect(x, y, 35, 28)
-        pygame.draw.rect(screen, color, rect, border_radius=5)
-
-        # Selected color has a thicker border.
-        if current_color == color:
-            pygame.draw.rect(screen, BLACK, rect, 3, border_radius=5)
-        else:
-            pygame.draw.rect(screen, BLACK, rect, 1, border_radius=5)
-
-        x += 45
-
-    draw_text("C - clear | ESC - quit", 350, 58, BLACK)
-
-
-# This function checks which toolbar button was clicked.
-def handle_toolbar_click(pos):
-    global current_tool, current_color
-
-    # Check tool buttons.
-    x = 10
-    for name, tool in tools:
-        rect = pygame.Rect(x, 10, 120, 30)
-
-        if rect.collidepoint(pos):
-            current_tool = tool
-            return
-
-        x += 130
-
-    # Check color buttons.
-    x = 10
-    y = 52
-
-    for color, name in colors:
-        rect = pygame.Rect(x, y, 35, 28)
-
-        if rect.collidepoint(pos):
-            current_color = color
-            return
-
-        x += 45
-
-
-# Assignment 11 requirement:
-# This function creates a square.
-def get_square_rect(start, end):
+# draw smooth brush line
+def draw_smooth_line(surface, color, start, end, radius):
     dx = end[0] - start[0]
     dy = end[1] - start[1]
+    distance = max(abs(dx), abs(dy))
 
-    # Square width and height must be equal.
+    if distance == 0:
+        pygame.draw.circle(surface, color, start, radius)
+        return
+
+    for i in range(distance + 1):
+        x = int(start[0] + dx * i / distance)
+        y = int(start[1] + dy * i / distance)
+        pygame.draw.circle(surface, color, (x, y), radius)
+
+
+# draw rectangle from start point to end point
+def draw_rectangle(surface, color, start, end, width=0):
+    x1, y1 = start
+    x2, y2 = end
+    rect = pygame.Rect(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1))
+    pygame.draw.rect(surface, color, rect, width)
+
+
+# draw circle inside selected area
+def draw_circle(surface, color, start, end, width=0):
+    x1, y1 = start
+    x2, y2 = end
+    center = ((x1 + x2) // 2, (y1 + y2) // 2)
+    radius = int(math.hypot(x2 - x1, y2 - y1) / 2)
+
+    if radius > 0:
+        pygame.draw.circle(surface, color, center, radius, width)
+
+
+# draw square with equal width and height
+def draw_square(surface, color, start, end, width=0):
+    x1, y1 = start
+    x2, y2 = end
+
+    dx = x2 - x1
+    dy = y2 - y1
     side = min(abs(dx), abs(dy))
 
     if dx < 0:
-        x = start[0] - side
+        x = x1 - side
     else:
-        x = start[0]
+        x = x1
 
     if dy < 0:
-        y = start[1] - side
+        y = y1 - side
     else:
-        y = start[1]
+        y = y1
 
-    return pygame.Rect(x, y, side, side)
+    rect = pygame.Rect(x, y, side, side)
+    pygame.draw.rect(surface, color, rect, width)
 
 
-# Assignment 11 requirement:
-# This function creates a right triangle.
-def get_right_triangle_points(start, end):
-    return [
+# draw right triangle
+def draw_right_triangle(surface, color, start, end, width=0):
+    points = [
         start,
         (end[0], start[1]),
         end
     ]
 
+    pygame.draw.polygon(surface, color, points, width)
 
-# Assignment 11 requirement:
-# This function creates an equilateral triangle.
-def get_equilateral_triangle_points(start, end):
+
+# draw equilateral triangle
+def draw_equilateral_triangle(surface, color, start, end, width=0):
     x1, y1 = start
     x2, y2 = end
 
-    # Find the middle point of the base.
     mid_x = (x1 + x2) / 2
     mid_y = (y1 + y2) / 2
 
     dx = x2 - x1
     dy = y2 - y1
 
-    # Height formula for equilateral triangle.
     height = math.sqrt(3) / 2
 
-    # Calculate third point of the triangle.
-    apex_x = mid_x - dy * height
-    apex_y = mid_y + dx * height
+    third_x = mid_x - dy * height
+    third_y = mid_y + dx * height
 
-    return [
+    points = [
         (x1, y1),
         (x2, y2),
-        (apex_x, apex_y)
+        (third_x, third_y)
     ]
 
+    pygame.draw.polygon(surface, color, points, width)
 
-# Assignment 11 requirement:
-# This function creates a rhombus.
-def get_rhombus_points(start, end):
-    left = min(start[0], end[0])
-    right = max(start[0], end[0])
-    top = min(start[1], end[1])
-    bottom = max(start[1], end[1])
+
+# draw rhombus inside selected area
+def draw_rhombus(surface, color, start, end, width=0):
+    x1, y1 = start
+    x2, y2 = end
+
+    left = min(x1, x2)
+    right = max(x1, x2)
+    top = min(y1, y2)
+    bottom = max(y1, y2)
 
     center_x = (left + right) // 2
     center_y = (top + bottom) // 2
 
-    return [
+    points = [
         (center_x, top),
         (right, center_y),
         (center_x, bottom),
         (left, center_y)
     ]
 
-
-# This function draws the selected shape on the canvas.
-def draw_shape(surface, tool, start, end, color):
-    if tool == "square":
-        pygame.draw.rect(surface, color, get_square_rect(start, end), 3)
-
-    elif tool == "right_triangle":
-        points = get_right_triangle_points(start, end)
-        pygame.draw.polygon(surface, color, points, 3)
-
-    elif tool == "equilateral_triangle":
-        points = get_equilateral_triangle_points(start, end)
-        pygame.draw.polygon(surface, color, points, 3)
-
-    elif tool == "rhombus":
-        points = get_rhombus_points(start, end)
-        pygame.draw.polygon(surface, color, points, 3)
+    pygame.draw.polygon(surface, color, points, width)
 
 
-# Main program loop
-while True:
-    clock.tick(60)
+# choose which shape to draw
+def draw_shape(surface, color, start, end, width=0):
+    if mode == "rectangle":
+        draw_rectangle(surface, color, start, end, width)
 
-    # Event handling
+    elif mode == "circle":
+        draw_circle(surface, color, start, end, width)
+
+    elif mode == "square":
+        draw_square(surface, color, start, end, width)
+
+    elif mode == "right_triangle":
+        draw_right_triangle(surface, color, start, end, width)
+
+    elif mode == "equilateral_triangle":
+        draw_equilateral_triangle(surface, color, start, end, width)
+
+    elif mode == "rhombus":
+        draw_rhombus(surface, color, start, end, width)
+
+
+running = True
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
-        # Keyboard controls
-        if event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                pygame.quit()
-                sys.exit()
+                running = False
 
-            if event.key == pygame.K_c:
+            # choose drawing tools
+            elif event.key == pygame.K_b:
+                mode = "brush"
+
+            elif event.key == pygame.K_r:
+                mode = "rectangle"
+
+            elif event.key == pygame.K_c:
+                mode = "circle"
+
+            elif event.key == pygame.K_e:
+                mode = "eraser"
+
+            elif event.key == pygame.K_s:
+                mode = "square"
+
+            elif event.key == pygame.K_t:
+                mode = "right_triangle"
+
+            elif event.key == pygame.K_q:
+                mode = "equilateral_triangle"
+
+            elif event.key == pygame.K_h:
+                mode = "rhombus"
+
+            # choose color
+            elif event.key == pygame.K_1:
+                color = RED
+
+            elif event.key == pygame.K_2:
+                color = GREEN
+
+            elif event.key == pygame.K_3:
+                color = BLUE
+
+            elif event.key == pygame.K_4:
+                color = YELLOW
+
+            elif event.key == pygame.K_5:
+                color = PURPLE
+
+            elif event.key == pygame.K_6:
+                color = BLACK
+
+            # change brush size
+            elif event.key == pygame.K_UP:
+                brush_size += 2
+
+            elif event.key == pygame.K_DOWN:
+                brush_size = max(2, brush_size - 2)
+
+            # clear canvas
+            elif event.key == pygame.K_z:
                 canvas.fill(WHITE)
 
-        # Mouse click starts drawing or selects toolbar button.
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if event.pos[1] < TOOLBAR_HEIGHT:
-                    handle_toolbar_click(event.pos)
-                else:
-                    drawing = True
-                    start_pos = to_canvas_pos(event.pos)
-                    last_pos = start_pos
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            drawing = True
+            start_pos = event.pos
+            last_pos = event.pos
 
-        # Mouse movement draws pencil or eraser lines.
-        if event.type == pygame.MOUSEMOTION:
+            if mode == "brush":
+                pygame.draw.circle(canvas, color, event.pos, brush_size)
+
+            elif mode == "eraser":
+                pygame.draw.circle(canvas, WHITE, event.pos, brush_size)
+
+        elif event.type == pygame.MOUSEMOTION and drawing:
+            if mode == "brush":
+                draw_smooth_line(canvas, color, last_pos, event.pos, brush_size)
+                last_pos = event.pos
+
+            elif mode == "eraser":
+                draw_smooth_line(canvas, WHITE, last_pos, event.pos, brush_size)
+                last_pos = event.pos
+
+        elif event.type == pygame.MOUSEBUTTONUP:
             if drawing:
-                current_pos = to_canvas_pos(event.pos)
+                end_pos = event.pos
 
-                if current_tool == "pencil":
-                    pygame.draw.line(canvas, current_color, last_pos, current_pos, brush_size)
-                    last_pos = current_pos
+                if mode not in ["brush", "eraser"]:
+                    draw_shape(canvas, color, start_pos, end_pos)
 
-                elif current_tool == "eraser":
-                    pygame.draw.line(canvas, WHITE, last_pos, current_pos, brush_size * 3)
-                    last_pos = current_pos
+            drawing = False
+            start_pos = None
+            last_pos = None
 
-        # Mouse release finalizes the selected shape.
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1 and drawing:
-                end_pos = to_canvas_pos(event.pos)
+    screen.blit(canvas, (0, 0))
 
-                if current_tool not in ["pencil", "eraser"]:
-                    draw_shape(canvas, current_tool, start_pos, end_pos, current_color)
-
-                drawing = False
-                start_pos = None
-                last_pos = None
-
-    # Draw canvas on the screen.
-    screen.fill(WHITE)
-    screen.blit(canvas, (0, TOOLBAR_HEIGHT))
-
-    # Shape preview while dragging the mouse.
-    if drawing and current_tool not in ["pencil", "eraser"]:
+    # show shape preview while mouse is dragged
+    if drawing and mode not in ["brush", "eraser"] and start_pos is not None:
+        current_pos = pygame.mouse.get_pos()
         preview = canvas.copy()
-        mouse_pos = to_canvas_pos(pygame.mouse.get_pos())
-        draw_shape(preview, current_tool, start_pos, mouse_pos, current_color)
-        screen.blit(preview, (0, TOOLBAR_HEIGHT))
 
-    draw_toolbar()
+        draw_shape(preview, color, start_pos, current_pos, 2)
+
+        screen.blit(preview, (0, 0))
+
     pygame.display.flip()
+    clock.tick(120)
+
+pygame.quit()
